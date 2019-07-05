@@ -400,7 +400,7 @@ namespace BCI_PC
                 sum += (int)AnteriorSegment[i];
             }
             sum = sum % 256;
-            return AnteriorSegment+ Convert.ToString(sum, 16);
+            return Concat(AnteriorSegment, sum);
         }
 
         // 获得消息序号
@@ -411,7 +411,7 @@ namespace BCI_PC
             {
                 CmdNum = 0;
             }
-            return Convert.ToString(CmdNum, 16);
+            return Concat("", CmdNum);
         }
 
         // 给命令添加消息序号
@@ -502,7 +502,8 @@ namespace BCI_PC
                 MessageBox.Show("通道类型有错误！");
                 return;
             }
-            string cmd = BCICommand.TEST_CHANNEL + Convert.ToString(channel, 16) + Convert.ToString(channelType, 16);
+            string cmd = Concat(BCICommand.TEST_CHANNEL, channel);
+            cmd = Concat(cmd, channelType);
             port.Write(HandleCMD(cmd));
 
             Timer t = new Timer(200);
@@ -557,7 +558,7 @@ namespace BCI_PC
             string srb1 = Convert.ToString(SRB1, 2);
             string srb2 = Convert.ToString(SRB2, 2);
             string byte1 = channel + srb1 + srb2;
-            byte1= Convert.ToString(Convert.ToInt32(byte1, 2), 16);
+            byte1= Concat("", Convert.ToInt32(byte1, 2));
 
             string bias = Convert.ToString(BIAS, 2);
             string type = Convert.ToString(TYPE, 2);
@@ -566,7 +567,8 @@ namespace BCI_PC
             gan = HandleLen(gan, 3);
             string batt = Convert.ToString(BATT, 2);
             string byte2 = bias + type + gan+batt;
-            byte2 = Convert.ToString(Convert.ToInt32(byte2, 2), 16);
+            byte2 = Concat("", Convert.ToInt32(byte2, 2));
+
             cmd = cmd + byte1 + byte2;
 
             port.Write(HandleCMD(cmd));
@@ -608,7 +610,8 @@ namespace BCI_PC
             string n = Convert.ToString(N, 2);
             string p = Convert.ToString(P, 2);
             string byte1 = channel + reversal + n + p;
-            byte1 = Convert.ToString(Convert.ToInt32(byte1, 2), 16);
+            byte1 = Concat("", Convert.ToInt32(byte1, 2));
+
 
             cmd = cmd + byte1;
 
@@ -646,7 +649,8 @@ namespace BCI_PC
             rate = HandleLen(rate, 3);
             string start = Convert.ToString(START, 2);
             string byte1 = '0' + mode + rate + start;
-            byte1 = Convert.ToString(Convert.ToInt32(byte1, 2), 16);
+            byte1 = Concat("", Convert.ToInt32(byte1, 2));
+
             cmd = cmd + byte1;
 
             port.Write(HandleCMD(cmd));
@@ -683,7 +687,8 @@ namespace BCI_PC
             rate = HandleLen(rate, 3);
             string start = Convert.ToString(START, 2);
             string byte1 = '0' + mode + rate + start;
-            byte1 = Convert.ToString(Convert.ToInt32(byte1, 2), 16);
+            byte1 = Concat("", Convert.ToInt32(byte1, 2));
+
             cmd = cmd + byte1;
 
             port.Write(HandleCMD(cmd));
@@ -795,7 +800,8 @@ namespace BCI_PC
         // 数据重发
         private void ResendData(int num)
         {
-            string cmd = BCICommand.DATA_RESEND + Convert.ToString(num, 16)+ Convert.ToString(0, 16); ;
+            string cmd = Concat(BCICommand.DATA_RESEND, num);
+            cmd = Concat(cmd, 0);
             port.Write(HandleCMD(cmd));
 
             Timer t = new Timer(200);
@@ -876,6 +882,15 @@ namespace BCI_PC
             }
         }
         #endregion
+
+        public string Concat(string a,int b)
+        {
+            if (string.IsNullOrEmpty(a))
+            {
+                return System.Text.RegularExpressions.Regex.Unescape("\\x" + b.ToString("X2"));
+            }
+            return a + System.Text.RegularExpressions.Regex.Unescape("\\x"+b.ToString("X2"));
+        }
 
     }
 
