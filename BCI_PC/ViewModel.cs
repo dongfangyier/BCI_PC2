@@ -12,6 +12,7 @@ namespace BCI_PC
     class ViewModel : INotifyPropertyChanged
     {
         private List<string> portList = new List<string>();
+        public string PortName { get; set; }
         public List<string> PortList
         {
             get => portList;
@@ -21,9 +22,13 @@ namespace BCI_PC
                 NotifyPropertyChanged("PortList");
             }
         }
+        public BCIEntity bCIEntity;
 
         public ViewModel()
         {
+            BCIEntity.savePath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            BCIEntity.initSave();
+            bCIEntity = new BCIEntity(PortName);
         }
 
        
