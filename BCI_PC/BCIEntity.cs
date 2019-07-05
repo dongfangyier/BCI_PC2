@@ -378,7 +378,7 @@ namespace BCI_PC
                 sum += (int)AnteriorSegment[i];
             }
             sum = sum % 256;
-            return AnteriorSegment+ Convert.ToString(len, 16);
+            return AnteriorSegment+ Convert.ToString(sum, 16);
         }
 
         // 获得消息序号
