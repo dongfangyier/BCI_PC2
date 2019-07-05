@@ -235,6 +235,22 @@ namespace BCI_PC
                                 MessageBox.Show("查询版本校验出错啦");
                                 break;
                             }
+                            int byte1 = bodybuf[6];
+                            string state = Convert.ToString(byte1, 2);
+                            state = HandleLen(state, 8);
+                            int mainversion= Convert.ToInt32(state.Substring(0,4), 2);
+                            int secongversion = Convert.ToInt32(state.Substring(4, 8), 2);
+
+                            int byte2 = bodybuf[7];
+                            state = HandleLen(state, 8);
+                            int changeversion = Convert.ToInt32(state.Substring(0, 4), 2);
+
+
+
+                            int version1 = bodybuf[8];
+                            int version2 = bodybuf[9];
+                            int version3 = bodybuf[10];
+
                             BCICommandTime.QUERY_VERSION_Time = true;
                             break;
                         case 0x14:  // 数据重发
