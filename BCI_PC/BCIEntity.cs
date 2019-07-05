@@ -773,7 +773,7 @@ namespace BCI_PC
         // 数据重发
         private void ResendData(int num)
         {
-            string cmd = BCICommand.DATA_RESEND + num.ToString("X2");
+            string cmd = BCICommand.DATA_RESEND + Convert.ToString(num, 16)+ Convert.ToString(0, 16); ;
             port.Write(HandleCMD(cmd));
 
             Timer t = new Timer(200);
