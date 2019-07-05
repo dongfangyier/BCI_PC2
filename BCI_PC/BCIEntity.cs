@@ -31,8 +31,14 @@ namespace BCI_PC
             port.DataBits = 8;
             port.StopBits = StopBits.One;
             port.Parity = 0;
-            CmdNum = -1;
+
+            CmdNum = -1;  // 消息序号
+            notHeart = 0;
+            isBadData = false; // 收到校验失败的数据
+            isReceivedResendData = false; //收到重发数据
+            recentNo = -1;
             BCICommandTime.init();
+
             port.Open();
             port.DataReceived += Port_DataReceived;
 
