@@ -13,6 +13,8 @@ namespace BCI_PC
     {
         public SerialPort port = new SerialPort();
         private List<byte> rawBuffer=new List<byte>();
+        Timer HeartRateTimer = new Timer(1000);
+
         private int CmdNum = -1;  // 消息序号
         int notHeart = 0;
         bool isBadData = false; // 收到校验失败的数据
@@ -22,6 +24,7 @@ namespace BCI_PC
 
         public BCIEntity(string name, int rate = 921600)
         {
+            port = new SerialPort();
             if (port.IsOpen)
             {
                 port.Close();
@@ -32,18 +35,27 @@ namespace BCI_PC
             port.StopBits = StopBits.One;
             port.Parity = 0;
 
+            init();
+            port.DataReceived += Port_DataReceived;
+
+        }
+        public void init()
+        {
             CmdNum = -1;  // 消息序号
             notHeart = 0;
             isBadData = false; // 收到校验失败的数据
             isReceivedResendData = false; //收到重发数据
             recentNo = -1;
             BCICommandTime.init();
+        }
 
+
+        public void StartBCI()
+        {
             port.Open();
-            port.DataReceived += Port_DataReceived;
 
-            Timer t = new Timer(1000);
-            t.Elapsed += new ElapsedEventHandler((object sender, ElapsedEventArgs e) => {
+            HeartRateTimer = new Timer(1000);
+            HeartRateTimer.Elapsed += new ElapsedEventHandler((object sender, ElapsedEventArgs e) => {
                 HeartBeat();
                 if (BCICommandTime.HEART_BEAT_Time)
                 {
@@ -53,10 +65,10 @@ namespace BCI_PC
                 else
                 {
                     notHeart++;
-                    if (notHeart == 2)
+                    if (notHeart >= 2)
                     {
                         MessageBox.Show("断开连接");
-                        t.Stop();
+                        HeartRateTimer.Stop();
                         if (port.IsOpen)
                         {
                             port.Close();
@@ -64,8 +76,21 @@ namespace BCI_PC
                     }
                 }
             });
-            t.AutoReset = true;
-            t.Start();
+            HeartRateTimer.AutoReset = true;
+            HeartRateTimer.Start();
+        }
+
+        public void StopBCI()
+        {
+            if (HeartRateTimer.Enabled)
+            {
+                HeartRateTimer.Stop();
+            }
+            if (port.IsOpen)
+            {
+                CloseChannel();
+                port.Close();
+            }
         }
 
         #region 接收数据
@@ -435,7 +460,7 @@ namespace BCI_PC
 
         #region 命令
         // 通道开控制
-        private void OpenChannel()
+        public void OpenChannel()
         {
             port.Write(HandleCMD(BCICommand.OPEN_CHANNEL));
             Timer t = new Timer(200);
@@ -459,7 +484,7 @@ namespace BCI_PC
         }
 
         // 通道关
-        private void CloseChannel()
+        public void CloseChannel()
         {
             port.Write(HandleCMD(BCICommand.CLOSE_CHANNEL));
             Timer t = new Timer(200);
@@ -490,7 +515,7 @@ namespace BCI_PC
         //3：连接到直流信号
         //4：连接到测试信号 2倍幅度的慢脉冲
         //5：连接到测试信号 2倍幅度的快脉冲
-        private void TestChannel(int channel, int channelType)
+        public void TestChannel(int channel, int channelType)
         {
             if (channel < 0 || channel > 21)
             {
@@ -544,7 +569,7 @@ namespace BCI_PC
         }
 
         // 通道设置
-        private void SetChannel(int CHANNEL, int BATT = 0, int SRB1 = 1, int SRB2 = 1, int BIAS = 1, int TYPE = 0,int GAN = 6)
+        public void SetChannel(int CHANNEL, int BATT = 0, int SRB1 = 1, int SRB2 = 1, int BIAS = 1, int TYPE = 0,int GAN = 6)
         {
             if (CHANNEL < 0 || CHANNEL > 21)
             {
@@ -596,7 +621,7 @@ namespace BCI_PC
 
 
         // 阻抗测试
-        private void TestImpedance(int CHANNEL, int REVERSAL = 0, int N = 0, int P = 0)
+        public void TestImpedance(int CHANNEL, int REVERSAL = 0, int N = 0, int P = 0)
         {
             if (CHANNEL < 0 || CHANNEL > 21)
             {
@@ -639,7 +664,7 @@ namespace BCI_PC
 
 
         // 采集控制 start
-        private void AcqControlStart(int MODE=0,int RATE=6,int START=1)
+        public void AcqControlStart(int MODE=0,int RATE=6,int START=1)
         {
             string cmd = BCICommand.ACQUISTION_CONTROL;
 
@@ -677,7 +702,7 @@ namespace BCI_PC
         }
 
         // 采集控制 stop
-        private void AcqControlStop(int MODE = 0, int RATE = 6, int START = 0)
+        public void AcqControlStop(int MODE = 0, int RATE = 6, int START = 0)
         {
             string cmd = BCICommand.ACQUISTION_CONTROL;
 
@@ -714,13 +739,13 @@ namespace BCI_PC
         }
 
         // 心跳包
-        private void HeartBeat()
+        public void HeartBeat()
         {
             port.Write(HandleCMD(BCICommand.HEART_BEAT));
         }
 
         // 查询寄存器
-        private void QueryRegisiter()
+        public void QueryRegisiter()
         {
             port.Write(HandleCMD(BCICommand.QUERY_REGISTER));
 
@@ -746,7 +771,7 @@ namespace BCI_PC
         }
 
         // 软重启
-        private void SoftRestart()
+        public void SoftRestart()
         {
             port.Write(HandleCMD(BCICommand.SOFT_RESTART));
 
@@ -756,8 +781,7 @@ namespace BCI_PC
                 {
                     BCICommandTime.SOFT_RESTART_Time = false;
                     BCICommandTime.resendCount[7] = 0;
-                    CmdNum = -1;
-                    BCICommandTime.init();
+                    init();
                 }
                 else
                 {
@@ -773,7 +797,7 @@ namespace BCI_PC
         }
 
         //查询版本
-        private void QueryVersion()
+        public void QueryVersion()
         {
             port.Write(HandleCMD(BCICommand.QUERY_VERSION));
 
@@ -798,7 +822,7 @@ namespace BCI_PC
         }
 
         // 数据重发
-        private void ResendData(int num)
+        public void ResendData(int num)
         {
             string cmd = Concat(BCICommand.DATA_RESEND, num);
             cmd = Concat(cmd, 0);

@@ -29,6 +29,8 @@ namespace BCI_PC
             BCIEntity.savePath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             BCIEntity.initSave();
             bCIEntity = new BCIEntity(PortName);
+            bCIEntity.StartBCI();
+            bCIEntity.OpenChannel();
         }
 
        
